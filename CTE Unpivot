@@ -1,0 +1,24 @@
+with PDW1 as (
+select
+        replace(replace(online_or_in_person,'1','Online'),'2','In-Person') as online_or_in_person
+        ,value
+        ,'Q'||quarter(to_date(transaction_date, 'dd/MM/yyyy hh:mi:ss')) as qtr
+        ,split_part(transaction_code,'-',1) as bank
+    from pd2023_wk01
+)
+select
+    pdw1.online_or_in_person
+    ,qtr
+    ,sum(pdw1.value) as "value"
+    ,target
+    ,"value"-target as "Variance to Target"
+from pd2023_wk03_targets
+unpivot(Target for Quarter in (q1,q2,q3,q4)) as "03"
+left join pdw1
+    on "03".online_or_in_person=pdw1.online_or_in_person
+        and "03".quarter=pdw1.qtr
+where bank = 'DSB'
+group by pdw1.qtr
+    ,pdw1.online_or_in_person
+    ,target
+
