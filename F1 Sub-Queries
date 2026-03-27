@@ -1,0 +1,26 @@
+select
+    re.driverid
+    ,d.forename
+    ,d.surname
+    ,re.fastestlapspeed as "Fastest lap speed (Monaco 2021)"
+    , monaco_wins
+from races ra
+inner join results re
+    on ra.raceid=re.raceid
+inner join drivers d
+    on re.driverid=d.driverid
+left join (select
+    driverid
+    ,ra.name
+    ,count(positiontext) as monaco_wins
+from results re
+inner join races ra
+    on re.raceid=  ra.raceid
+where ra.name = 'Monaco Grand Prix'
+ and positiontext = '1'
+ group by driverid,
+    ra.name
+) as wins
+    on wins.driverid=d.driverid
+where year = '2021'
+    and ra.name = 'Monaco Grand Prix'
