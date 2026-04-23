@@ -1,0 +1,88 @@
+//Find the difference between an order and average order value using window calcs only
+select
+    order_id
+    , sum(sales) as "total sales"
+    , avg("total sales") over() as "Avg sales"
+    , "total sales"-"Avg sales" as "difference"
+from orders
+group by 
+    order_id
+;
+//Find the % that order contributed towards the total sales for that Region and State  
+select
+    o.order_id
+    ,c.state
+    , sum(o.sales) over (
+        partition by
+            o.order_id
+    )
+    / sum(o.sales) over(
+        partition by 
+            c.state
+    ) as "% of state sales"
+from orders o
+    inner join 
+        customers c
+    on o.customer_id=c.customer_id
+;
+//RANK
+SELECT
+    order_id
+    , sales
+    , row_number () over (
+        order by sales desc
+    )
+from orders
+;
+//LAG / LEAD
+//% diff between one order and 2nd previous order
+select
+    customer_id
+    , order_id
+    , order_date
+    , sales
+    , LAG (sales, 2) over (
+        order by order_date
+    )
+  /*, LESD (sales, 2) over (
+        order by order_date
+    )*/
+from orders
+where
+    customer_id = 'HP-14815'
+order by
+    order_date
+;
+//first_value() / last_value()
+//value of 1st order placed for this customer
+select
+      customer_id
+    , order_id
+    , order_date
+    , sales
+    , last_value(sales) over (
+        order by order_date desc
+    )
+from orders
+where
+    customer_id = 'HP-14815'
+order by
+    order_date desc
+;
+//MAX
+select
+    o.customer_id
+    , c.region
+    , sum(o.sales) as "total sales"
+    ,max("total sales") over (
+        partition by 
+        region
+    ) as "Max sales"
+    , "total sales"="Max sales" as TF
+from orders o
+    join 
+        customers c
+    on c.customer_id=o.customer_id
+group by
+    1,2
+qualify TF = true
