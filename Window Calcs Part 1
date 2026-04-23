@@ -1,0 +1,23 @@
+//For each order, find the % contributed towards the total sale amount
+select 
+     order_id
+    , sales
+    , sum(sales)over()
+from orders
+;
+//For each order, find the % contributed towards the total regional sale amount
+select
+     region
+     , sum(sales) over(partition by region)
+from orders
+;
+//Find the 3 day moving average of sales
+select
+     order_id
+    , order_date
+    , sales
+    , sum(sales) over (
+        order by order_date asc
+        rows between unbounded preceding and current row
+    ) as "running total"
+from orders
